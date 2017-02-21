@@ -165,6 +165,7 @@ import org.talend.repository.localprovider.i18n.Messages;
 import org.talend.repository.model.IProxyRepositoryFactory;
 import org.talend.repository.model.RepositoryConstants;
 import org.talend.utils.json.JSONArray;
+
 import orgomg.cwm.foundation.businessinformation.BusinessinformationPackage;
 
 /**
@@ -2047,8 +2048,26 @@ public class LocalRepositoryFactory extends AbstractEMFRepositoryFactory impleme
     @Override
     public void setMigrationTasksDone(Project project, List<MigrationTask> list) throws PersistenceException {
         List oldMigrationTasks = project.getEmfProject().getMigrationTask();
-        project.getEmfProject().getMigrationTask().clear();
-        project.getEmfProject().getMigrationTask().addAll(list);
+        // project.getEmfProject().getMigrationTask().clear();
+        Map<String, MigrationTask> refreshedTaskMap = new HashMap<String, MigrationTask>();
+        if (list != null) {
+            Iterator<MigrationTask> iter = list.iterator();
+            while (iter.hasNext()) {
+                MigrationTask task = iter.next();
+                refreshedTaskMap.put(task.getId(), task);
+            }
+        }
+        if (oldMigrationTasks != null) {
+            Iterator<MigrationTask> iter = oldMigrationTasks.iterator();
+            while (iter.hasNext()) {
+                MigrationTask task = iter.next();
+                String key = task.getId();
+                if (refreshedTaskMap.containsKey(key)) {
+                    refreshedTaskMap.put(key, task);
+                }
+            }
+        }
+        project.getEmfProject().getMigrationTask().addAll(refreshedTaskMap.values());
         saveProject(project);
     }
 
